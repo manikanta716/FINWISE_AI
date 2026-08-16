@@ -1,0 +1,15 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Lets the frontend call the clean path /api/financial-tips instead of
+# /.netlify/functions/financial-tips. This path also matches Vercel's
+# native /api/* convention, so js/config.js needs no change if you
+# ever move the function to Vercel instead.
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200

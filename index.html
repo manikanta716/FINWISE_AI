@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinWise AI — Loan Eligibility, Credit Analysis &amp; Financial Advisory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#0E2A2B;
+    --ink-2:#123437;
+    --parchment:#ECE7D8;
+    --parchment-dim:#C9C3AC;
+    --brass:#C9A227;
+    --brass-bright:#E4C24E;
+    --approve:#2F6F4E;
+    --approve-bg:#1B3A2C;
+    --decline:#A63D33;
+    --decline-bg:#3A211D;
+    --review:#B4791F;
+    --review-bg:#3A2C15;
+    --line:#33504F;
+    --display:'Fraunces', serif;
+    --body:'Public Sans', sans-serif;
+    --mono:'JetBrains Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 12% 8%, rgba(201,162,39,0.08), transparent 40%),
+      radial-gradient(circle at 88% 92%, rgba(201,162,39,0.06), transparent 45%),
+      var(--ink);
+    color:var(--parchment);
+    font-family:var(--body);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--brass);color:var(--ink);}
+  a{color:var(--brass-bright);}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:36px 24px 80px;}
+
+  header.top{
+    display:flex;align-items:flex-end;justify-content:space-between;
+    gap:24px;flex-wrap:wrap;
+    border-bottom:1px solid var(--line);
+    padding-bottom:22px;margin-bottom:8px;
+  }
+  .brand{display:flex;align-items:center;gap:14px;}
+  .mark{width:44px;height:44px;flex:none;}
+  .brand-text h1{
+    font-family:var(--display);font-weight:700;font-size:28px;letter-spacing:0.2px;
+    margin:0;line-height:1;color:var(--parchment);
+  }
+  .brand-text p{
+    margin:6px 0 0;font-family:var(--mono);font-size:11px;letter-spacing:2.5px;
+    text-transform:uppercase;color:var(--brass);
+  }
+  .ledger-id{
+    font-family:var(--mono);font-size:11px;color:var(--parchment-dim);
+    text-align:right;line-height:1.6;
+  }
+  .ledger-id .dot{color:var(--approve);}
+
+  nav.tabs{
+    display:flex;gap:0;margin-top:28px;border-bottom:1px solid var(--line);
+    overflow-x:auto;
+  }
+  nav.tabs button{
+    font-family:var(--mono);font-size:12px;letter-spacing:1px;text-transform:uppercase;
+    background:transparent;border:1px solid transparent;border-bottom:none;
+    color:var(--parchment-dim);padding:14px 22px;cursor:pointer;
+    border-radius:8px 8px 0 0;white-space:nowrap;transition:all .18s ease;
+    position:relative;top:1px;
+  }
+  nav.tabs button .num{color:var(--brass);margin-right:8px;}
+  nav.tabs button:hover{color:var(--parchment);background:rgba(201,162,39,0.06);}
+  nav.tabs button.active{
+    color:var(--parchment);background:var(--ink-2);
+    border-color:var(--line);border-bottom:1px solid var(--ink-2);
+  }
+
+  section.page{display:none;padding-top:34px;animation:fadeUp .35s ease;}
+  section.page.active{display:block;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  @media (prefers-reduced-motion: reduce){ section.page{animation:none;} }
+
+  .lead{max-width:640px;margin-bottom:28px;}
+  .lead h2{font-family:var(--display);font-size:26px;margin:0 0 8px;font-weight:600;}
+  .lead p{margin:0;color:var(--parchment-dim);font-size:14.5px;line-height:1.6;}
+
+  .grid{display:grid;grid-template-columns:1.1fr 1fr;gap:28px;align-items:start;}
+  @media (max-width:820px){.grid{grid-template-columns:1fr;}}
+
+  .card{
+    background:var(--ink-2);border:1px solid var(--line);border-radius:10px;
+    padding:26px;
+  }
+  .card h3{
+    font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;
+    color:var(--brass);margin:0 0 20px;display:flex;align-items:center;gap:8px;
+  }
+  .card h3::before{content:'';width:6px;height:6px;background:var(--brass);border-radius:50%;display:inline-block;}
+
+  .field{margin-bottom:16px;}
+  .field label{
+    display:flex;justify-content:space-between;font-size:12.5px;color:var(--parchment-dim);
+    margin-bottom:6px;font-family:var(--body);font-weight:500;
+  }
+  .field label span.val{font-family:var(--mono);color:var(--brass-bright);font-weight:600;}
+  input[type=range]{width:100%;accent-color:var(--brass);height:4px;background:var(--line);}
+  input[type=number], input[type=text], input[type=password], select{
+    width:100%;background:var(--ink);border:1px solid var(--line);border-radius:6px;
+    color:var(--parchment);padding:10px 12px;font-family:var(--mono);font-size:13px;
+    outline:none;transition:border-color .15s;
+  }
+  input[type=number]:focus, input[type=text]:focus, input[type=password]:focus, select:focus{border-color:var(--brass);}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+  .btn{
+    width:100%;margin-top:6px;background:var(--brass);color:var(--ink);border:none;
+    font-family:var(--mono);font-size:12.5px;letter-spacing:1.5px;text-transform:uppercase;
+    font-weight:700;padding:14px;border-radius:6px;cursor:pointer;transition:background .15s, transform .1s;
+  }
+  .btn:hover{background:var(--brass-bright);}
+  .btn:active{transform:scale(0.99);}
+  .btn:disabled{opacity:0.6;cursor:not-allowed;}
+
+  .btn-secondary{
+    background:transparent;border:1px solid var(--brass);color:var(--brass-bright);
+    font-family:var(--mono);font-size:11.5px;letter-spacing:1px;text-transform:uppercase;
+    font-weight:700;padding:10px 16px;border-radius:6px;cursor:pointer;transition:background .15s;
+  }
+  .btn-secondary:hover{background:rgba(201,162,39,0.1);}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+
+  .receipt{
+    background:var(--parchment);color:var(--ink);border-radius:4px;
+    font-family:var(--mono);position:relative;overflow:hidden;
+    box-shadow:0 18px 40px -12px rgba(0,0,0,0.55);
+  }
+  .receipt .perf{
+    height:10px;
+    background-image:radial-gradient(circle, var(--ink-2) 4px, transparent 4.2px);
+    background-size:16px 16px;background-position:4px center;
+    background-color:var(--parchment);
+  }
+  .receipt-inner{padding:22px 24px 26px;}
+  .receipt .rline{display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0;border-bottom:1px dashed rgba(14,42,43,0.2);}
+  .receipt .rline:last-child{border-bottom:none;}
+  .receipt .rlabel{color:#5a5748;}
+  .receipt .rval{font-weight:700;}
+  .stamp{
+    display:inline-block;font-family:var(--display);font-weight:700;font-size:20px;
+    letter-spacing:2px;text-transform:uppercase;border:3px solid currentColor;
+    padding:6px 16px;border-radius:6px;transform:rotate(-4deg);margin:0;
+  }
+  .stamp.approve{color:var(--approve);}
+  .stamp.review{color:var(--review);}
+  .stamp.decline{color:var(--decline);}
+  .stamp-row{display:flex;align-items:center;gap:12px;margin:14px 0 6px;flex-wrap:wrap;}
+  .risk-pill{font-size:10.5px;padding:5px 12px;}
+  .fit-note{margin-top:12px;padding:10px 12px;border-radius:6px;font-size:11.5px;line-height:1.5;border:1px solid;}
+  .fit-ok{background:rgba(47,111,78,0.10);color:var(--approve);border-color:rgba(47,111,78,0.3);}
+  .fit-warn{background:rgba(166,61,51,0.10);color:var(--decline);border-color:rgba(166,61,51,0.3);}
+  .receipt-title{font-family:var(--body);font-weight:700;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#5a5748;margin-bottom:2px;}
+  .receipt-sub{font-size:10.5px;color:#8a866f;margin-bottom:12px;}
+  .empty-receipt{
+    display:flex;align-items:center;justify-content:center;min-height:260px;
+    color:var(--parchment-dim);font-family:var(--mono);font-size:12.5px;text-align:center;
+    padding:30px;border:1px dashed var(--line);border-radius:10px;
+  }
+
+  .bars{margin-top:6px;}
+  .bar-row{margin-bottom:14px;}
+  .bar-row .bl{display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:5px;color:var(--parchment-dim);font-family:var(--body);}
+  .bar-track{height:8px;border-radius:4px;background:rgba(255,255,255,0.06);overflow:hidden;}
+  .bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--brass),var(--brass-bright));}
+
+  .factor-list{list-style:none;margin:16px 0 0;padding:0;font-size:12.5px;}
+  .factor-list li{
+    display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);
+    color:var(--parchment-dim);align-items:flex-start;
+  }
+  .factor-list li:last-child{border-bottom:none;}
+  .tag{
+    flex:none;font-family:var(--mono);font-size:9.5px;padding:2px 7px;border-radius:20px;
+    text-transform:uppercase;letter-spacing:0.5px;font-weight:700;margin-top:1px;
+  }
+  .tag.pos{background:var(--approve-bg);color:#7CC49E;}
+  .tag.neg{background:var(--decline-bg);color:#E29489;}
+  .tag.neu{background:var(--review-bg);color:#E3B36B;}
+
+  canvas{max-width:100%;}
+
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;}
+  .stat-box{background:var(--ink);border:1px solid var(--line);border-radius:8px;padding:16px;text-align:center;}
+  .stat-box.big{grid-column:1 / -1;padding:22px;}
+  .stat-box .stat-label{font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--parchment-dim);margin-bottom:8px;}
+  .stat-box .stat-value{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--brass-bright);}
+  .stat-box.big .stat-value{font-size:34px;}
+
+  .subhead{
+    font-family:var(--mono);font-size:10.5px;letter-spacing:2px;text-transform:uppercase;
+    color:var(--parchment-dim);margin:26px 0 14px;padding-top:20px;border-top:1px dashed var(--line);
+  }
+  .subhead:first-of-type{margin-top:0;padding-top:0;border-top:none;}
+
+  .inline-note{display:none;margin-top:12px;padding:10px 12px;border-radius:6px;font-size:12px;line-height:1.5;border:1px solid var(--line);}
+  .inline-note.pos-note{background:rgba(47,111,78,0.10);color:#7CC49E;border-color:rgba(47,111,78,0.35);}
+  .inline-note.neg-note{background:rgba(166,61,51,0.10);color:#E29489;border-color:rgba(166,61,51,0.35);}
+  .inline-note.neu-note{background:rgba(180,121,31,0.10);color:#E3B36B;border-color:rgba(180,121,31,0.35);}
+  .context-note{font-size:11.5px;color:var(--parchment-dim);margin:0 0 16px;line-height:1.5;}
+
+  .ai-section{margin-bottom:20px;}
+  .ai-section:last-child{margin-bottom:0;}
+  .ai-section-title{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--brass);margin-bottom:8px;}
+  .ai-section p{font-size:13px;color:var(--parchment-dim);line-height:1.6;margin:0;}
+
+  .quick-result{text-align:center;margin:18px 0 4px;}
+  .quick-result .band{font-family:var(--display);font-weight:700;font-size:32px;line-height:1;}
+  .quick-result .band-sub{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--parchment-dim);margin-top:6px;}
+
+  details.code-reveal{margin-top:16px;border-top:1px dashed var(--line);padding-top:16px;}
+  details.code-reveal summary{cursor:pointer;font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--brass);}
+  details.code-reveal pre{
+    margin-top:12px;background:var(--ink);border:1px solid var(--line);border-radius:8px;
+    padding:16px;font-size:11px;line-height:1.6;color:var(--parchment-dim);overflow-x:auto;
+    max-height:320px;overflow-y:auto;white-space:pre;
+  }
+
+  footer.note{
+    margin-top:56px;padding-top:20px;border-top:1px solid var(--line);
+    font-family:var(--mono);font-size:10.5px;color:var(--parchment-dim);
+    line-height:1.7;text-align:center;
+  }
+  footer.note b{color:var(--brass);}
+
+  input:focus-visible, select:focus-visible, button:focus-visible{
+    outline:2px solid var(--brass-bright);outline-offset:2px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 44 44" fill="none">
+        <rect x="1" y="1" width="42" height="42" rx="8" stroke="#C9A227" stroke-width="1.4"/>
+        <path d="M12 30V16l10-6 10 6v14" stroke="#ECE7D8" stroke-width="1.4" stroke-linejoin="round"/>
+        <path d="M17 30V21h10v9" stroke="#C9A227" stroke-width="1.4" stroke-linejoin="round"/>
+        <circle cx="22" cy="16.2" r="1.6" fill="#C9A227"/>
+      </svg>
+      <div class="brand-text">
+        <h1>FinWise AI</h1>
+        <p>Ledger of Loan &amp; Credit Intelligence</p>
+      </div>
+    </div>
+    <div class="ledger-id">
+      SESSION No. <span id="sessId">FW-0000</span><br>
+      STATUS <span class="dot">●</span> MODEL ACTIVE<br>
+      <span id="sessDate">—</span>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="loan"><span class="num">01</span>Loan Eligibility</button>
+    <button class="tab-btn" data-tab="credit"><span class="num">02</span>Credit Analysis</button>
+    <button class="tab-btn" data-tab="emi"><span class="num">03</span>EMI Calculator</button>
+    <button class="tab-btn" data-tab="aitips"><span class="num">04</span>AI Financial Tips</button>
+  </nav>
+
+  <!-- ============ PAGE 1: LOAN ELIGIBILITY ============ -->
+  <section class="page active" id="page-loan">
+    <div class="lead">
+      <h2>Loan Eligibility Assessment</h2>
+      <p>Enter your income, obligations and credit profile. The engine derives an eligible loan ceiling from your credit tier and existing debt load, and classifies your risk as Low, Medium or High — independent of any specific amount you go on to request.</p>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <h3>Applicant Inputs</h3>
+        <div class="row2">
+          <div class="field">
+            <label>Monthly Net Income <span class="val" id="v_income">₹4,00,000</span></label>
+            <input type="range" id="income" min="10000" max="2000000" step="10000" value="400000">
+          </div>
+          <div class="field">
+            <label>Existing Monthly EMIs <span class="val" id="v_obl">₹5,00,000</span></label>
+            <input type="range" id="obl" min="0" max="1000000" step="500" value="500000">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Credit Score <span class="val" id="v_cs">720</span></label>
+            <input type="range" id="cs" min="300" max="900" step="5" value="720">
+          </div>
+          <div class="field">
+            <label>Applicant Age <span class="val" id="v_age">27</span></label>
+            <input type="range" id="age" min="21" max="60" step="1" value="27">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Employment Type</label>
+            <select id="emp">
+              <option value="salaried_govt">Salaried — Government</option>
+              <option value="salaried_pvt" selected>Salaried — Private Sector</option>
+              <option value="self_emp">Self-Employed / Business</option>
+              <option value="freelance">Freelance / Gig Income</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Loan Type</label>
+            <select id="loanType">
+              <option value="personal">Personal Loan</option>
+              <option value="home" selected>Home Loan</option>
+              <option value="Vehicle">Vehicle Loan</option>
+              <option value="business">Business Loan</option>
+            </select>
+          </div>
+        </div>
+        <p class="subhead">Optional — plan a specific request</p>
+        <div class="row2">
+          <div class="field">
+            <label>Loan Amount You Want <span class="val" id="v_amt">₹40,00,000</span></label>
+            <input type="range" id="amt" min="50000" max="30000000" step="10000" value="4000000">
+          </div>
+          <div class="field">
+            <label>Tenure (months) <span class="val" id="v_ten">120</span></label>
+            <input type="range" id="ten" min="6" max="360" step="6" value="120">
+          </div>
+        </div>
+        <button class="btn" id="runLoan">Run Eligibility Check</button>
+      </div>
+
+      <div id="loanResultWrap">
+        <div class="empty-receipt">No assessment run yet.<br>Fill in the ledger and press<br>“Run Eligibility Check.”</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PAGE 2: CREDIT ANALYSIS ============ -->
+  <section class="page" id="page-credit">
+    <div class="lead">
+      <h2>Credit Score Analysis</h2>
+      <p>Already know your score? Classify it instantly. Want the full picture? Build one from your underlying payment behaviour in the detailed analyzer below.</p>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <h3>Quick Classify</h3>
+        <div class="field">
+          <label>Your Credit Score <span class="val" id="v_quickScore">650</span></label>
+          <input type="range" id="quickScore" min="300" max="900" step="5" value="650">
+        </div>
+        <button class="btn" id="runQuickClassify">Classify Score</button>
+        <div class="quick-result">
+          <div class="band" id="quickBandOut">—</div>
+          <div class="band-sub">Score <span id="quickScoreEcho">—</span> · 300–900 scale</div>
+        </div>
+        <ul class="factor-list" id="quickRecs"></ul>
+      </div>
+
+      <div class="card">
+        <h3>Composite Score (Detailed Analyzer)</h3>
+        <div style="text-align:center;margin-bottom:10px;">
+          <div style="font-family:var(--display);font-weight:700;font-size:56px;color:var(--brass-bright);line-height:1;" id="scoreOut">—</div>
+          <div style="font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--parchment-dim);margin-top:6px;" id="scoreBand">Run analysis to compute</div>
+        </div>
+        <canvas id="creditChart" height="180"></canvas>
+        <ul class="factor-list" id="factorList"></ul>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:24px;">
+      <h3>Detailed Analyzer Inputs</h3>
+      <div class="row2">
+        <div class="field">
+          <label>On-Time Payment History <span class="val" id="v_pay">92%</span></label>
+          <input type="range" id="pay" min="0" max="100" step="1" value="92">
+        </div>
+        <div class="field">
+          <label>Credit Utilization Ratio <span class="val" id="v_util">38%</span></label>
+          <input type="range" id="util" min="0" max="100" step="1" value="38">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Credit History Age (years) <span class="val" id="v_cage">6</span></label>
+          <input type="range" id="cage" min="0" max="30" step="1" value="6">
+        </div>
+        <div class="field">
+          <label>Open Credit Accounts <span class="val" id="v_acc">4</span></label>
+          <input type="range" id="acc" min="0" max="20" step="1" value="4">
+        </div>
+      </div>
+      <div class="field">
+        <label>Hard Inquiries (12 mo) <span class="val" id="v_inq">2</span></label>
+        <input type="range" id="inq" min="0" max="10" step="1" value="2">
+      </div>
+      <button class="btn" id="runCredit">Analyze Credit Profile</button>
+    </div>
+  </section>
+
+  <!-- ============ PAGE 3: EMI CALCULATOR ============ -->
+  <section class="page" id="page-emi">
+    <div class="lead">
+      <h2>EMI Calculator</h2>
+      <p>Plan any loan independently of the eligibility engine — set your own principal, rate and tenure to see the exact monthly outflow before you apply.</p>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <h3>Loan Parameters</h3>
+        <div class="field">
+          <label>Principal Amount <span class="val" id="v_emiPrincipal">₹5,00,000</span></label>
+          <input type="range" id="emiPrincipal" min="10000" max="15000000" step="10000" value="500000">
+        </div>
+        <div class="field">
+          <label>Annual Interest Rate <span class="val" id="v_emiRate">10.5%</span></label>
+          <input type="range" id="emiRate" min="5" max="24" step="0.25" value="10.5">
+        </div>
+        <div class="field">
+          <label>Tenure (months) <span class="val" id="v_emiTenure">60</span></label>
+          <input type="range" id="emiTenure" min="3" max="360" step="3" value="60">
+        </div>
+        <button class="btn" id="runEmi">Calculate EMI</button>
+      </div>
+
+      <div class="card">
+        <h3>Repayment Breakdown</h3>
+        <div class="stat-grid">
+          <div class="stat-box big">
+            <div class="stat-label">Monthly EMI</div>
+            <div class="stat-value" id="emiOut">—</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Principal</div>
+            <div class="stat-value" id="emiPrincipalOut">—</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Total Interest</div>
+            <div class="stat-value" id="emiTotalInterest">—</div>
+          </div>
+          <div class="stat-box big">
+            <div class="stat-label">Total Payment (Principal + Interest)</div>
+            <div class="stat-value" id="emiTotalPayment">—</div>
+          </div>
+        </div>
+        <canvas id="emiChart" height="200" style="margin-top:20px;"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PAGE 4: AI FINANCIAL TIPS ============ -->
+  <section class="page" id="page-aitips">
+    <div class="lead">
+      <h2>AI Financial Tips</h2>
+      <p>A deterministic budget snapshot, plus AI-generated recommendations, credit improvement strategies, EMI optimization suggestions and a risk classification report — synthesized live by Claude from your session.</p>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <h3>Your Situation</h3>
+        <div class="row2">
+          <div class="field">
+            <label>Monthly Take-Home <span class="val" id="v_ainc">₹60,000</span></label>
+            <input type="range" id="ainc" min="10000" max="500000" step="1000" value="60000">
+          </div>
+          <div class="field">
+            <label>Fixed Monthly Expenses <span class="val" id="v_aexp">₹22,000</span></label>
+            <input type="range" id="aexp" min="0" max="400000" step="500" value="22000">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Existing Debt Payments <span class="val" id="v_adebt">₹5,000</span></label>
+            <input type="range" id="adebt" min="0" max="200000" step="500" value="5000">
+          </div>
+          <div class="field">
+            <label>Current Savings <span class="val" id="v_asav">₹1,00,000</span></label>
+            <input type="range" id="asav" min="0" max="10000000" step="5000" value="100000">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Primary Goal</label>
+            <select id="goal">
+              <option value="emergency">Build Emergency Fund</option>
+              <option value="home" selected>Save for a Home</option>
+              <option value="retire">Retirement Planning</option>
+              <option value="debt">Become Debt-Free</option>
+              <option value="wealth">Grow Long-Term Wealth</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Risk Appetite</label>
+            <select id="risk">
+              <option value="conservative">Conservative</option>
+              <option value="moderate" selected>Moderate</option>
+              <option value="aggressive">Aggressive</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" id="runBudgetSnapshot">Update Quick Snapshot</button>
+      </div>
+
+      <div class="card">
+        <h3>Quick Snapshot — Recommended Allocation</h3>
+        <canvas id="budgetChart" height="200"></canvas>
+        <div class="bars" id="allocBars"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:24px;">
+      <h3>Quick Snapshot Notes</h3>
+      <ul class="factor-list" id="advisoryNotes"></ul>
+    </div>
+
+    <div class="card" style="margin-top:24px;">
+      <h3>AI-Generated Tips (Live Claude Call)</h3>
+      <p class="context-note" id="aiTipsContext">Using data from 0 of 3 tools run so far (Loan, Credit, EMI).</p>
+      <div class="field">
+        <label>Your Claude API Key <span class="val">session only — never saved</span></label>
+        <input type="password" id="apiKeyInput" placeholder="sk-ant-...">
+      </div>
+      <p class="context-note">Get a key at <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a>. This calls Claude directly from your browser, so the key lives only in this tab for this session — it's never sent anywhere but Anthropic, and never saved to disk. Fine for personal or local use; don't publish this page with a real key already typed in.</p>
+      <button class="btn" id="generateAiTips">Generate AI Financial Tips</button>
+      <div class="inline-note" id="aiTipsStatus"></div>
+      <div id="aiTipsResults" style="margin-top:18px;"></div>
+    </div>
+
+    <div class="card" style="margin-top:24px;">
+      <h3>Cloud History (Google Sheets)</h3>
+      <p class="context-note">Save a snapshot of this session to your own Google Sheet, and revisit it later. Requires a one-time deploy of the Apps Script below under your own Google account (Google hosts it for free — nothing to install).</p>
+      <div class="field">
+        <label>Google Apps Script Web App URL</label>
+        <input type="text" id="sheetsEndpointInput" placeholder="https://script.google.com/macros/s/XXXXX/exec">
+      </div>
+      <div class="btn-row">
+        <button class="btn-secondary" id="saveToCloud">Save Session to Cloud</button>
+        <button class="btn-secondary" id="refreshHistory">Refresh History</button>
+      </div>
+      <div class="inline-note" id="cloudNote"></div>
+      <ul class="factor-list" id="historyList" style="margin-top:16px;"></ul>
+
+      <details class="code-reveal">
+        <summary>Show Google Apps Script code (Extensions → Apps Script → paste → Deploy as Web App)</summary>
+        <pre>
+/**
+ * FinWise AI — Google Apps Script backend
+ * ------------------------------------------------------------
+ * Provides a lightweight cloud database using a Google Sheet.
+ *
+ * SETUP
+ * 1. Create (or open) a Google Sheet.
+ * 2. Extensions &gt; Apps Script.
+ * 3. Delete any starter code and paste this whole file in.
+ * 4. Deploy &gt; New deployment &gt; type &quot;Web app&quot;.
+ *      Execute as:  Me
+ *      Who has access: Anyone
+ * 5. Copy the deployment URL (ends in /exec) into
+ *    js/config.js -&gt; SHEETS_ENDPOINT.
+ * 6. Open the /exec URL once directly in your browser — this
+ *    triggers Google&#x27;s one-time authorization prompt for the
+ *    script. Without this step, requests from the app will fail.
+ *
+ * A sheet named &quot;FinWiseHistory&quot; is created automatically the
+ * first time a record is saved.
+ */
+
+const SHEET_NAME = &#x27;FinWiseHistory&#x27;;
+const HEADERS = [&#x27;Timestamp&#x27;, &#x27;Tool&#x27;, &#x27;Summary&#x27;];
+
+function ensureSheet_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME);
+    sheet.appendRow(HEADERS);
+  }
+  return sheet;
+}
+
+/** Handles POST requests — saves one financial-session snapshot as a row. */
+function doPost(e) {
+  try {
+    const body = JSON.parse(e.postData.contents);
+    const sheet = ensureSheet_();
+    sheet.appendRow([
+      new Date().toISOString(),
+      body.tool || &#x27;unknown&#x27;,
+      JSON.stringify(body.summary || {})
+    ]);
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: true }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: false, error: String(err) }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/** Handles GET requests — ?action=history returns saved records as JSON. */
+function doGet(e) {
+  try {
+    const action = e.parameter.action;
+    if (action === &#x27;history&#x27;) {
+      const sheet = ensureSheet_();
+      const values = sheet.getDataRange().getValues();
+      const rows = values
+        .slice(1) // drop header row
+        .map(r =&gt; ({ timestamp: r[0], tool: r[1], summary: safeParse_(r[2]) }))
+        .reverse()
+        .slice(0, 50); // most recent 50
+      return ContentService
+        .createTextOutput(JSON.stringify({ ok: true, records: rows }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: true, message: &#x27;FinWise AI Sheets backend is running.&#x27; }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: false, error: String(err) }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function safeParse_(str) {
+  try { return JSON.parse(str); } catch (e) { return str; }
+}
+</pre>
+      </details>
+    </div>
+  </section>
+
+  <footer class="note">
+    <b>FinWise AI</b> combines transparent rule-based calculators with live Claude-generated tips — not a real credit bureau or licensed lender.<br>
+    All figures are for illustration. AI-generated content can be wrong; verify anything financially significant with a licensed advisor.
+  </footer>
+</div>
+
+<script>
+/* ---------------- Shared state, config, helpers ---------------- */
+const FinWiseState = { loan:null, credit:null, emi:null, goal:null, risk:null };
+let userApiKey = '';
+let sheetsEndpoint = '';
+
+const fmtINR = n => '₹' + Math.round(n).toLocaleString('en-IN');
+const $ = id => document.getElementById(id);
+
+function bindRange(id, labelId, formatter){
+  const el = $(id), lab = $(labelId);
+  const update = () => lab.textContent = formatter(Number(el.value));
+  el.addEventListener('input', update);
+  update();
+}
+function emiFor(principal, annualRatePct, months){
+  const r = (annualRatePct/12)/100;
+  if(r===0) return principal/months;
+  const f = Math.pow(1+r, months);
+  return principal * r * f / (f-1);
+}
+function showNote(elId, text, tone){
+  const el = $(elId);
+  if(!el) return;
+  el.textContent = text;
+  el.className = 'inline-note' + (tone ? ' ' + tone : '');
+  el.style.display = 'block';
+}
+
+/* ---------------- Session header + tabs ---------------- */
+document.getElementById('sessId').textContent = 'FW-' + Math.floor(1000+Math.random()*9000);
+document.getElementById('sessDate').textContent = new Date().toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'});
+
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('page-'+btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ================= TOOL 1: LOAN ELIGIBILITY ================= */
+bindRange('income','v_income', v=>fmtINR(v));
+bindRange('obl','v_obl', v=>fmtINR(v));
+bindRange('amt','v_amt', v=>fmtINR(v));
+bindRange('ten','v_ten', v=>v);
+bindRange('cs','v_cs', v=>v);
+bindRange('age','v_age', v=>v);
+
+function creditTierMultiplier(cs){
+  if(cs>=750) return 24;
+  if(cs>=700) return 20;
+  if(cs>=650) return 15;
+  if(cs>=600) return 10;
+  if(cs>=550) return 6;
+  return 3;
+}
+function rateForScore(cs, loanType){
+  let base;
+  if(cs>=780) base=8.5;
+  else if(cs>=750) base=9.5;
+  else if(cs>=700) base=11.0;
+  else if(cs>=650) base=13.0;
+  else if(cs>=600) base=15.5;
+  else base=18.5;
+  const adj = {personal:2.0, home:0, Vehicle:1.0, business:2.5}[loanType] || 0;
+  return +(base+adj).toFixed(2);
+}
+function riskTierFor(cs, income, obl){
+  const existingDTI = income>0 ? obl/income : 1;
+  if(cs>=700 && existingDTI<=0.20) return 'Low';
+  if(cs>=600 && existingDTI<=0.40) return 'Medium';
+  return 'High';
+}
+function verdictFor(riskTier, eligibleCeiling){
+  if(riskTier==='Low' && eligibleCeiling>0) return 'Approved';
+  if(riskTier==='Medium' && eligibleCeiling>0) return 'Conditional Review';
+  return 'Not Eligible';
+}
+
+function runLoanEligibility(){
+  const income = Number($('income').value);
+  const obl = Number($('obl').value);
+  const amt = Number($('amt').value);
+  const ten = Number($('ten').value);
+  const cs = Number($('cs').value);
+  const age = Number($('age').value);
+  const emp = $('emp').value;
+  const loanType = $('loanType').value;
+
+  const rate = rateForScore(cs, loanType);
+  const riskTier = riskTierFor(cs, income, obl);
+  const adjIncome = Math.max(0, income - obl);
+  const eligibleCeiling = Math.round(adjIncome * creditTierMultiplier(cs));
+  const verdict = verdictFor(riskTier, eligibleCeiling);
+
+  const requestEmi = emiFor(amt, rate, ten);
+  const fitsWithinCeiling = amt <= eligibleCeiling;
+
+  const result = {
+    income, obl, amt, ten, cs, age, emp, loanType,
+    rate, riskTier, eligibleCeiling, verdict,
+    requestEmi: Math.round(requestEmi),
+    fitsWithinCeiling,
+    totalRepayment: Math.round(requestEmi*ten)
+  };
+
+  FinWiseState.loan = result;
+  renderLoanReceipt(result);
+  refreshAiTipsAvailability();
+}
+
+function renderLoanReceipt(d){
+  const wrap = $('loanResultWrap');
+  const riskClass = d.riskTier==='Low' ? 'pos' : d.riskTier==='Medium' ? 'neu' : 'neg';
+  wrap.innerHTML = `
+    <div class="receipt">
+      <div class="perf"></div>
+      <div class="receipt-inner">
+        <div class="receipt-title">FinWise AI — Underwriting Slip</div>
+        <div class="receipt-sub">${d.loanType.toUpperCase()} LOAN · CREDIT SCORE ${d.cs}</div>
+        <div class="stamp-row">
+          <div class="stamp ${d.verdict==='Approved'?'approve':d.verdict==='Conditional Review'?'review':'decline'}">${d.verdict}</div>
+          <span class="tag ${riskClass} risk-pill">${d.riskTier} Risk</span>
+        </div>
+        <div class="rline"><span class="rlabel">Eligible Loan Amount</span><span class="rval">${fmtINR(d.eligibleCeiling)}</span></div>
+        <div class="rline"><span class="rlabel">Applicable Interest Rate</span><span class="rval">${d.rate}% p.a.</span></div>
+        <div class="rline"><span class="rlabel">Existing Obligations</span><span class="rval">${fmtINR(d.obl)}</span></div>
+        <div class="rline"><span class="rlabel">— Requested Amount</span><span class="rval">${fmtINR(d.amt)}</span></div>
+        <div class="rline"><span class="rlabel">— Indicative EMI (${d.ten} mo)</span><span class="rval">${fmtINR(d.requestEmi)}</span></div>
+        <div class="rline"><span class="rlabel">— Total Repayment</span><span class="rval">${fmtINR(d.totalRepayment)}</span></div>
+        <div class="fit-note ${d.fitsWithinCeiling?'fit-ok':'fit-warn'}">
+          ${d.fitsWithinCeiling
+            ? 'Your requested amount is within your eligible ceiling.'
+            : `Your requested amount exceeds your eligible ceiling by ${fmtINR(d.amt-d.eligibleCeiling)} — consider a lower amount or a longer tenure.`}
+        </div>
+      </div>
+      <div class="perf"></div>
+    </div>
+  `;
+}
+$('runLoan').addEventListener('click', runLoanEligibility);
+
+/* ================= TOOL 2: CREDIT ANALYZER ================= */
+function bandFor(score){
+  if(score>=780) return {band:'Exceptional', color:'#7CC49E', tag:'pos'};
+  if(score>=740) return {band:'Very Good',   color:'#9ED2A9', tag:'pos'};
+  if(score>=670) return {band:'Good',        color:'#E3B36B', tag:'neu'};
+  if(score>=581) return {band:'Fair',        color:'#E29489', tag:'neu'};
+  return {band:'Poor', color:'#E06C5D', tag:'neg'};
+}
+const bandRecommendations = {
+  'Exceptional': [
+    'You qualify for the best available rates — keep utilization low and avoid unnecessary new inquiries.',
+    'Maintain your on-time payment streak; it is the hardest factor to rebuild if broken.',
+    'Review your credit mix occasionally, but don\u2019t open new accounts just to "optimize" further.'
+  ],
+  'Very Good': [
+    'Push utilization under 10% to move into the top tier.',
+    'Continue on-time payments — consistency over the next 6-12 months compounds fast at this level.',
+    'Avoid more than one hard inquiry in the next year.'
+  ],
+  'Good': [
+    'Pay down revolving balances — utilization is likely your biggest lever from here.',
+    'Avoid new hard inquiries for the next few months while your average account age grows.',
+    'Set up autopay for at least the minimum due, so a single missed payment never slips through.'
+  ],
+  'Fair': [
+    'Prioritize on-time payments above everything else — this factor alone can move the score fastest.',
+    'Work utilization down below 30%, then below 10% as a stretch goal.',
+    'Hold off on new credit applications until the score recovers.'
+  ],
+  'Poor': [
+    'Focus first on eliminating any missed or late payments going forward.',
+    'Bring credit utilization down aggressively — pay more than the minimum wherever possible.',
+    'Avoid new credit applications until the score shows sustained recovery; each hard inquiry compounds the damage.'
+  ]
+};
+
+bindRange('quickScore','v_quickScore', v=>v);
+bindRange('pay','v_pay', v=>v+'%');
+bindRange('util','v_util', v=>v+'%');
+bindRange('cage','v_cage', v=>v);
+bindRange('acc','v_acc', v=>v);
+bindRange('inq','v_inq', v=>v);
+
+function runQuickClassify(){
+  const score = Number($('quickScore').value);
+  const b = bandFor(score);
+  $('quickBandOut').textContent = b.band;
+  $('quickBandOut').style.color = b.color;
+  $('quickScoreEcho').textContent = score;
+  $('quickRecs').innerHTML = bandRecommendations[b.band].map(r=>
+    `<li><span class="tag ${b.tag}">${b.band}</span><span>${r}</span></li>`
+  ).join('');
+  FinWiseState.credit = { score, band: b.band, source: 'quick' };
+  refreshAiTipsAvailability();
+}
+
+let creditChart;
+function runCreditAnalysis(){
+  const pay = Number($('pay').value);
+  const util = Number($('util').value);
+  const cage = Number($('cage').value);
+  const acc = Number($('acc').value);
+  const inq = Number($('inq').value);
+
+  const payScore = pay;
+  const utilScore = util<=10?100: util<=30?85: util<=50?60: util<=75?35:10;
+  const ageScore = Math.min(100, (cage/15)*100);
+  const mixScore = acc===0?20 : acc<=2?55 : acc<=6?90 : acc<=10?75:55;
+  const inqScore = inq===0?100 : inq<=2?85 : inq<=4?60 : inq<=6?35:10;
+
+  const weighted = payScore*0.35 + utilScore*0.30 + ageScore*0.15 + mixScore*0.10 + inqScore*0.10;
+  const score = Math.round(300 + (weighted/100)*600);
+  const b = bandFor(score);
+
+  $('scoreOut').textContent = score;
+  $('scoreOut').style.color = b.color;
+  $('scoreBand').textContent = b.band + ' · 300–900 scale';
+
+  const ctx = document.getElementById('creditChart');
+  const data = {
+    labels:['Payment History','Utilization','Credit Age','Account Mix','New Inquiries'],
+    datasets:[{ label:'Factor Strength', data:[payScore, utilScore, ageScore, mixScore, inqScore],
+      backgroundColor:'rgba(201,162,39,0.22)', borderColor:'#C9A227', pointBackgroundColor:'#E4C24E', borderWidth:2 }]
+  };
+  const opts = { responsive:true,
+    scales:{ r:{ angleLines:{color:'#33504F'}, grid:{color:'#33504F'},
+      pointLabels:{color:'#ECE7D8', font:{family:'Public Sans', size:11}},
+      ticks:{display:false, backdropColor:'transparent'}, suggestedMin:0, suggestedMax:100 }},
+    plugins:{legend:{display:false}} };
+  if(creditChart){ creditChart.data=data; creditChart.options=opts; creditChart.update(); }
+  else { creditChart = new Chart(ctx, {type:'radar', data, options:opts}); }
+
+  const factors = [
+    {label:`On-time payments at ${pay}% — the single heaviest factor in your score.`, weight:payScore},
+    {label:`Credit utilization at ${util}% of available limit.`, weight:utilScore},
+    {label:`${cage} year(s) of credit history establishes track record.`, weight:ageScore},
+    {label:`${acc} open account(s) shape your credit mix.`, weight:mixScore},
+    {label:`${inq} hard inquiry(ies) in the last 12 months.`, weight:inqScore},
+  ];
+  $('factorList').innerHTML = factors.map(f=>{
+    const tagClass = f.weight>=75?'pos':f.weight>=45?'neu':'neg';
+    const tagText = f.weight>=75?'Strong':f.weight>=45?'Watch':'Weak';
+    return `<li><span class="tag ${tagClass}">${tagText}</span><span>${f.label}</span></li>`;
+  }).join('');
+
+  FinWiseState.credit = { score, band: b.band, source: 'detailed', pay, util, cage, acc, inq };
+  refreshAiTipsAvailability();
+}
+$('runQuickClassify').addEventListener('click', runQuickClassify);
+$('runCredit').addEventListener('click', runCreditAnalysis);
+
+/* ================= TOOL 3: EMI CALCULATOR ================= */
+bindRange('emiPrincipal','v_emiPrincipal', v=>fmtINR(v));
+bindRange('emiRate','v_emiRate', v=>v+'%');
+bindRange('emiTenure','v_emiTenure', v=>v);
+
+let emiChart;
+function runEmiCalculator(){
+  const principal = Number($('emiPrincipal').value);
+  const rate = Number($('emiRate').value);
+  const months = Number($('emiTenure').value);
+
+  const emi = emiFor(principal, rate, months);
+  const totalPayment = emi*months;
+  const totalInterest = totalPayment - principal;
+
+  $('emiOut').textContent = fmtINR(emi);
+  $('emiTotalInterest').textContent = fmtINR(totalInterest);
+  $('emiTotalPayment').textContent = fmtINR(totalPayment);
+  $('emiPrincipalOut').textContent = fmtINR(principal);
+
+  const ctx = document.getElementById('emiChart');
+  const data = { labels:['Principal','Total Interest'],
+    datasets:[{ data:[principal, Math.max(0,totalInterest)], backgroundColor:['#2F6F4E','#B4791F'], borderColor:'#123437', borderWidth:3 }] };
+  const opts = { responsive:true, plugins:{ legend:{ labels:{color:'#ECE7D8', font:{family:'Public Sans', size:12}} } }, cutout:'62%' };
+  if(emiChart){ emiChart.data=data; emiChart.options=opts; emiChart.update(); }
+  else { emiChart = new Chart(ctx, {type:'doughnut', data, options:opts}); }
+
+  FinWiseState.emi = { principal, rate, months, emi: Math.round(emi), totalInterest: Math.round(totalInterest), totalPayment: Math.round(totalPayment) };
+  refreshAiTipsAvailability();
+}
+$('runEmi').addEventListener('click', runEmiCalculator);
+
+/* ================= TOOL 4: AI FINANCIAL TIPS ================= */
+bindRange('ainc','v_ainc', v=>fmtINR(v));
+bindRange('aexp','v_aexp', v=>fmtINR(v));
+bindRange('adebt','v_adebt', v=>fmtINR(v));
+bindRange('asav','v_asav', v=>fmtINR(v));
+
+let budgetChart;
+const riskAllocations = {
+  conservative:{equity:25, debt:55, gold:12, cash:8},
+  moderate:{equity:50, debt:30, gold:10, cash:10},
+  aggressive:{equity:75, debt:12, gold:8, cash:5}
+};
+
+function refreshAiTipsAvailability(){
+  const have = ['loan','credit','emi'].filter(k => FinWiseState[k]).length;
+  const el = $('aiTipsContext');
+  if(el) el.textContent = `Using data from ${have} of 3 tools run so far (Loan, Credit, EMI). Run more for richer tips, or generate now with what you have.`;
+}
+
+function runBudgetSnapshot(){
+  const inc = Number($('ainc').value);
+  const exp = Number($('aexp').value);
+  const debt = Number($('adebt').value);
+  const sav = Number($('asav').value);
+  const goal = $('goal').value;
+  const risk = $('risk').value;
+
+  const needs = exp + debt;
+  const surplus = inc - needs;
+  const dti = debt/inc;
+
+  const needsPct = Math.min(70, Math.round((needs/inc)*100));
+  let savingsPct = Math.max(10, Math.round(((inc*0.20))/inc*100));
+  let wantsPct = 100 - needsPct - savingsPct;
+  if(wantsPct<5){ wantsPct=5; savingsPct = 100-needsPct-wantsPct; }
+  const emergencyTarget = exp*6;
+
+  $('allocBars').innerHTML = [
+    {label:'Needs (rent, bills, debt)', pct:needsPct},
+    {label:'Wants (lifestyle, discretionary)', pct:wantsPct},
+    {label:'Savings & Investing', pct:savingsPct},
+  ].map(r=>`
+    <div class="bar-row">
+      <div class="bl"><span>${r.label}</span><span>${r.pct}%</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${r.pct}%"></div></div>
+    </div>
+  `).join('');
+
+  const ctx = document.getElementById('budgetChart');
+  const data = { labels:['Needs','Wants','Savings'],
+    datasets:[{ data:[needsPct, wantsPct, savingsPct], backgroundColor:['#A63D33','#B4791F','#2F6F4E'], borderColor:'#123437', borderWidth:3 }] };
+  const opts = { responsive:true, plugins:{ legend:{ labels:{color:'#ECE7D8', font:{family:'Public Sans', size:12}} } }, cutout:'62%' };
+  if(budgetChart){ budgetChart.data=data; budgetChart.options=opts; budgetChart.update(); }
+  else { budgetChart = new Chart(ctx, {type:'doughnut', data, options:opts}); }
+
+  const alloc = riskAllocations[risk];
+  const notes = [];
+  notes.push({tag: dti<=0.36?'pos':dti<=0.5?'neu':'neg',
+    text:`Debt-to-income is ${(dti*100).toFixed(1)}%. ${dti<=0.36?'This is within the healthy range lenders prefer (under 36%).':dti<=0.5?'This is elevated — prioritise paying down high-interest debt before taking on more.':'This is high risk territory — a debt paydown plan should come before new borrowing or investing.'}`});
+  notes.push({tag: sav>=emergencyTarget?'pos':'neu',
+    text:`Emergency fund target is ${fmtINR(emergencyTarget)} (6 months of expenses). You currently hold ${fmtINR(sav)}${sav>=emergencyTarget?' — target met.':`, a gap of ${fmtINR(emergencyTarget-sav)}.`}`});
+  notes.push({tag:'neu', text:`Suggested investment mix for a ${risk} risk appetite: ${alloc.equity}% equity, ${alloc.debt}% debt/fixed income, ${alloc.gold}% gold, ${alloc.cash}% cash equivalents.`});
+  notes.push({tag: surplus>0?'pos':'neg',
+    text: surplus>0 ? `Monthly surplus after fixed needs is ${fmtINR(surplus)} — this is your working capital for goals.` : `Expenses and debt exceed income by ${fmtINR(-surplus)} — this needs to be addressed before any savings plan will hold.`});
+
+  $('advisoryNotes').innerHTML = notes.map(n=>{
+    const tagText = n.tag==='pos'?'Good':n.tag==='neg'?'Alert':'Note';
+    return `<li><span class="tag ${n.tag}">${tagText}</span><span>${n.text}</span></li>`;
+  }).join('');
+
+  FinWiseState.goal = goal;
+  FinWiseState.risk = risk;
+  refreshAiTipsAvailability();
+}
+$('runBudgetSnapshot').addEventListener('click', runBudgetSnapshot);
+
+$('apiKeyInput').addEventListener('input', e => userApiKey = e.target.value.trim());
+
+function buildPrompt(payload){
+  const { loan, credit, emi, goal, risk } = payload;
+  return `You are a careful, factual financial-advisory assistant embedded in a demo fintech app called FinWise AI (India-focused, amounts in INR).
+
+Given the structured session data below, respond with ONLY a single valid JSON object (no markdown fences, no prose outside the JSON) matching exactly this schema:
+
+{
+  "risk_classification": { "tier": "Low" | "Medium" | "High", "summary": "one sentence" },
+  "loan_eligibility_summary": "2-3 sentences",
+  "credit_evaluation_summary": "2-3 sentences",
+  "personalized_recommendations": ["short actionable point", "..."],
+  "credit_improvement_strategies": ["short actionable point", "..."],
+  "emi_optimization_suggestions": ["short actionable point", "..."]
+}
+
+Keep each array to 3-4 concise, concrete, non-generic bullet points grounded in the numbers given. If a tool wasn't run yet, reason sensibly from whatever data IS available rather than inventing figures.
+
+SESSION DATA
+Loan Eligibility Tool: ${loan ? JSON.stringify(loan) : "not run yet"}
+Credit Analyzer Tool: ${credit ? JSON.stringify(credit) : "not run yet"}
+EMI Calculator Tool: ${emi ? JSON.stringify(emi) : "not run yet"}
+Stated goal: ${goal || "not specified"}
+Stated risk appetite: ${risk || "not specified"}
+
+Respond with the JSON object only.`;
+}
+
+async function generateAiTips(){
+  const btn = $('generateAiTips');
+  if(!userApiKey){
+    showNote('aiTipsStatus', 'Paste your Claude API key above first \u2014 it stays in this browser tab only.', 'neu-note');
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Thinking\u2026';
+  showNote('aiTipsStatus', 'Contacting Claude for a personalized read on your session\u2026', 'neu-note');
+  $('aiTipsResults').innerHTML = '';
+
+  const prompt = buildPrompt({
+    loan: FinWiseState.loan, credit: FinWiseState.credit, emi: FinWiseState.emi,
+    goal: FinWiseState.goal || $('goal').value, risk: FinWiseState.risk || $('risk').value
+  });
+
+  try{
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{
+        'content-type':'application/json',
+        'x-api-key': userApiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body: JSON.stringify({
+        model:'claude-sonnet-5',
+        max_tokens:1200,
+        messages:[{role:'user', content: prompt}]
+      })
+    });
+    const data = await res.json();
+    if(!res.ok){ throw new Error(data?.error?.message || `Request failed (${res.status})`); }
+    const text = (data.content||[]).map(b=>b.text||'').join('\n');
+    const cleaned = text.replace(/```json|```/g,'').trim();
+    const structured = JSON.parse(cleaned);
+    renderAiTips(structured);
+    showNote('aiTipsStatus', 'Generated live by Claude based on your current session.', 'pos-note');
+  }catch(err){
+    showNote('aiTipsStatus', `Couldn't reach Claude (${err.message}). Check your API key and try again.`, 'neg-note');
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'Generate AI Financial Tips';
+  }
+}
+
+function renderAiTips(data){
+  const el = $('aiTipsResults');
+  const riskTag = data.risk_classification?.tier === 'Low' ? 'pos' : data.risk_classification?.tier === 'Medium' ? 'neu' : 'neg';
+  const section = (title, items) => `
+    <div class="ai-section">
+      <div class="ai-section-title">${title}</div>
+      <ul class="factor-list">${(items||[]).map(i=>`<li><span class="tag neu">Tip</span><span>${i}</span></li>`).join('') || '<li><span>No suggestions returned.</span></li>'}</ul>
+    </div>`;
+  el.innerHTML = `
+    <div class="ai-section">
+      <div class="ai-section-title">Risk Classification</div>
+      <p><span class="tag ${riskTag}">${data.risk_classification?.tier || 'Unknown'}</span> ${data.risk_classification?.summary || ''}</p>
+    </div>
+    <div class="ai-section"><div class="ai-section-title">Loan Eligibility Summary</div><p>${data.loan_eligibility_summary || 'Run the Loan Eligibility tool for a tailored read.'}</p></div>
+    <div class="ai-section"><div class="ai-section-title">Credit Evaluation Summary</div><p>${data.credit_evaluation_summary || 'Run the Credit Analyzer for a tailored read.'}</p></div>
+    ${section('Personalized Recommendations', data.personalized_recommendations)}
+    ${section('Credit Improvement Strategies', data.credit_improvement_strategies)}
+    ${section('EMI Optimization Suggestions', data.emi_optimization_suggestions)}
+  `;
+}
+$('generateAiTips').addEventListener('click', generateAiTips);
+
+/* ---------------- Cloud History (Google Sheets) ---------------- */
+$('sheetsEndpointInput').addEventListener('input', e => sheetsEndpoint = e.target.value.trim());
+
+async function saveSessionToCloud(){
+  if(!sheetsEndpoint){ showNote('cloudNote', 'Paste your Google Apps Script URL above first (see the setup note below).', 'neu-note'); return; }
+  const summary = { loan: FinWiseState.loan, credit: FinWiseState.credit, emi: FinWiseState.emi, goal: FinWiseState.goal, risk: FinWiseState.risk };
+  try{
+    await fetch(sheetsEndpoint, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'}, body: JSON.stringify({ tool:'session-snapshot', summary }) });
+    showNote('cloudNote', 'Saved to your cloud history.', 'pos-note');
+    setTimeout(loadCloudHistory, 800);
+  }catch(err){ showNote('cloudNote', `Could not save (${err.message}).`, 'neg-note'); }
+}
+async function loadCloudHistory(){
+  const el = $('historyList');
+  if(!sheetsEndpoint){ el.innerHTML = '<li><span class="tag neu">Setup</span><span>Paste your Google Apps Script URL above to enable cloud history.</span></li>'; return; }
+  try{
+    const res = await fetch(sheetsEndpoint + '?action=history');
+    const data = await res.json();
+    if(!data.ok || !data.records || !data.records.length){ el.innerHTML = '<li><span class="tag neu">Empty</span><span>No saved records yet \u2014 run some tools and save a snapshot.</span></li>'; return; }
+    el.innerHTML = data.records.map(r=>{
+      const when = new Date(r.timestamp).toLocaleString('en-IN');
+      const bits = [];
+      if(r.summary?.loan) bits.push(`Loan: ${r.summary.loan.verdict}`);
+      if(r.summary?.credit) bits.push(`Credit: ${r.summary.credit.band}`);
+      if(r.summary?.emi) bits.push(`EMI: ${fmtINR(r.summary.emi.emi)}`);
+      return `<li><span class="tag neu">${when}</span><span>${bits.join(' \u00b7 ') || r.tool}</span></li>`;
+    }).join('');
+  }catch(err){ el.innerHTML = `<li><span class="tag neg">Error</span><span>Could not load history (${err.message}).</span></li>`; }
+}
+$('saveToCloud').addEventListener('click', saveSessionToCloud);
+$('refreshHistory').addEventListener('click', loadCloudHistory);
+
+/* ---------------- First paint ---------------- */
+runQuickClassify();
+runCreditAnalysis();
+runEmiCalculator();
+runBudgetSnapshot();
+refreshAiTipsAvailability();
+</script>
+</body>
+</html>
